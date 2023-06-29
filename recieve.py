@@ -4,6 +4,12 @@ connection = pika.BlockingConnection(
     pika.ConnectionParameters(host='localhost'))
 channel = connection.channel()
 
+channel.exchange_declare("dlx_exchange", "direct")
+channel.queue_declare("test_queue", arguments={
+  "x-dead-letter-exchange": "dlx_exchange", "x-dead-letter-routing-key": "dlx_key"})
+channel.queue_declare("dead_letter_queue")
+channel.queue_bind("dead_letter_queue", "dlx_exchange", "dlx_key")
+
 channel.exchange_declare(exchange='logs', exchange_type='fanout')
 
 result = channel.queue_declare(queue='', exclusive=True)
