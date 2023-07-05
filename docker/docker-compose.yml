@@ -1,0 +1,42 @@
+version: '3'
+services:
+  producer:
+    build:
+      context: .
+      dockerfile: Dockerfile1
+    networks:
+      mynetwork:
+        ipv4_address: 172.22.0.2
+    depends_on:
+      - rabbit
+
+      
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile2
+    networks:
+      mynetwork:
+        ipv4_address: 172.22.0.3
+    depends_on:
+      - rabbit
+      - producer
+
+      
+  rabbit:
+    image: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER='guest'
+      - RABBITMQ_DEFAULT_PASS='guest'
+    ports:
+      - 5672:5672
+      - 15672:15672
+    networks:
+      mynetwork:
+        ipv4_address: 172.22.0.5
+networks:
+  mynetwork:
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16
+
