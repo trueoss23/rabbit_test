@@ -4,11 +4,20 @@ connection = pika.BlockingConnection(
     pika.ConnectionParameters(host='localhost'))
 channel = connection.channel()
 
-channel.exchange_declare("dlx_exchange", "direct")
-channel.queue_declare("test_queue", arguments={
-  "x-dead-letter-exchange": "dlx_exchange", "x-dead-letter-routing-key": "dlx_key"})
-channel.queue_declare("dead_letter_queue")
-channel.queue_bind("dead_letter_queue", "dlx_exchange", "dlx_key")
+channel.exchange_declare(exchange="dlx_exchange",
+                         exchange_type="x-delayed-message",
+                         arguments={"x-delayed-type": "direct"})
+
+channel.queue_declare("test_queue",
+                      arguments={"x-dead-letter-exchange": "dlx_exchange",
+                      "x-dead-letter-routing-key": "dlx_key"})
+
+channel.basic_publish(exchange="dlx_exchange",
+                       routing_key="test_route",
+                       properties=pika.BasicProperties(
+                           headers={"x-delay": 2500}
+                       ),
+                       body='Hello World!')
 
 channel.exchange_declare(exchange='logs', exchange_type='fanout')
 
